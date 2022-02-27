@@ -1,4 +1,4 @@
-require('dotenv').config()
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
@@ -8,6 +8,9 @@ const User = require("./userSchema");
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
+const findOrCreate = require("mongoose-findorcreate");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const GitHubStrategy = require("passport-github").Strategy;
 
 app.use(express.static("public"));
 app.set("view engine", "ejs");
@@ -15,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //Using Session
 app.use(
   session({
-    secret: process.env.SECRET,
+    secret: process.env.CLIENT_SECRET,
     resave: false,
     saveUninitialized: false,
   })
@@ -30,12 +33,84 @@ mongoose.connect("mongodb://localhost:27017/UserInformationDB");
 passport.use(User.createStrategy());
 
 // use static serialize and deserialize of model for passport session support
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+passport.serializeUser(function (user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function (id, done) {
+  User.findById(id, function (err, user) {
+    done(err, user);
+  });
+});
+
+//Google Strategy
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.CLIENT_ID,
+      clientSecret: process.env.CLIENT_SECRET,
+      callbackURL: "http://localhost:3000/auth/google/secret",
+      userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+    },
+    function (accessToken, refreshToken, profile, cb) {
+      User.findOrCreate({ googleId: profile.id }, function (err, user) {
+        return cb(err, user);
+      });
+    }
+  )
+);
+
+//Github Authentication
+
+passport.use(
+  new GitHubStrategy(
+    {
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL: "http://localhost:3000/auth/github/secret"
+    },
+    function (accessToken, refreshToken, profile, cb) {
+      User.findOrCreate({ githubId: profile.id }, function (err, user) {
+        return cb(err, user);
+      });
+    }
+  )
+);
 
 app.get("/", (req, res) => {
   res.render("home");
 });
+
+//making request to google OAuth
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile"] })
+);
+
+app.get(
+  "/auth/google/secret",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("/secret");
+  }
+);
+
+//Making request to GitHub OAuth
+app.get(
+  "/auth/github",
+  passport.authenticate("github", { scope: ["user:email"] })
+);
+
+app.get(
+  "/auth/github/secret",
+  passport.authenticate("github", { failureRedirect: "/login" }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("/secret");
+  }
+);
 
 app.get("/signup", (req, res) => {
   res.render("signup");
@@ -43,7 +118,8 @@ app.get("/signup", (req, res) => {
 
 app.get("/secret", (req, res) => {
   if (req.isAuthenticated()) {
-    res.render("secret");
+   
+    res.render("secret", { agent: req.body.username });
   } else {
     res.redirect("/login");
   }
@@ -86,9 +162,9 @@ app.post("/login", (req, res) => {
   });
 });
 
-app.get("/logout",(req,res)=>{
+app.get("/logout", (req, res) => {
   req.logout();
-  res.redirect('/login')
-})
+  res.redirect("/login");
+});
 
-app.listen(process.env.PORT||3000, console.log("Server is listening"));
+app.listen(process.env.PORT || 3000, console.log("Server is listening"));
