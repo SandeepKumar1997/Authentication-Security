@@ -9,7 +9,8 @@ const User = new mongoose.Schema({
     unique: false,
   },
   googleId:String,
-  githubId:String
+  githubId:String,
+  secret:String
 });
 
 User.plugin(passportLocalMongoose);

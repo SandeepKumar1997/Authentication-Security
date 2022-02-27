@@ -7,7 +7,7 @@
  <meta name="description" content="">
  <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
  <meta name="generator" content="Hugo 0.88.1">
- <title>Home - Secrets</title>
+ <title>Home - SignUp</title>
 
  <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/cover/">
 
@@ -38,6 +38,19 @@
    user-select: none;
   }
 
+  textarea {
+
+   width: 100%;
+   border-radius: 1rem;
+   border: none;
+   font-weight: bold;
+   padding: 1rem;
+   background-color: lightgray;
+   -webkit-box-shadow: 0px 0px 13px 13px rgba(92, 90, 92, 0.97);
+   -moz-box-shadow: 0px 0px 13px 13px rgba(92, 90, 92, 0.97);
+   box-shadow: 0px 0px 13px 13px rgba(92, 90, 92, 0.97);
+  }
+
   @media (min-width: 768px) {
    .bd-placeholder-img-lg {
     font-size: 3.5rem;
@@ -55,26 +68,27 @@
  <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
   <header class="mb-auto">
    <div>
-    <h3 class="float-md-start mb-0">SecretStore</h3>
+    <h3 class="float-md-start mb-0">SignPage</h3>
     <nav class="nav nav-masthead justify-content-center float-md-end">
      <a class="nav-link active" aria-current="page" href="/">Home</a>
-     <a class="nav-link" href="/login">Log In</a>
-     <a class="nav-link" href="/signup">Sign Up</a>
+     <a class="nav-link" href="/logout">Log Out</a>
     </nav>
    </div>
   </header>
 
   <main class="px-3">
-   <h2>Hello folks! Let's see some secrets 😉</h2>
-   <%usersecret.forEach((items=>{%>
-    <p class="lead">
-     <%=items.secret%>
-    </p>
-    <%}))%>
-     <div>
-      <a href="/submit" class="btn btn-light" style="color:black;font-weight: bold;font-size: 0.9rem;"
-       role="button">Submit Secrets</a>
-     </div>
+   <h3 class="mb-4">Let's hear about you secret</h3>
+   <form action="/submit" method="post">
+
+    <div class="mb-3">
+
+     <textarea name="secret" cols="30" rows="10"></textarea>
+    </div>
+
+
+    <button type="submit" class="btn btn-light">Submit</button>
+    <a href="/" class="btn btn-secondary">Cancel</a>
+   </form>
   </main>
 
   <footer class="mt-auto text-white-50">

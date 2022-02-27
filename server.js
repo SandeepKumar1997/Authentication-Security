@@ -68,7 +68,7 @@ passport.use(
     {
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/auth/github/secret"
+      callbackURL: "http://localhost:3000/auth/github/secret",
     },
     function (accessToken, refreshToken, profile, cb) {
       User.findOrCreate({ githubId: profile.id }, function (err, user) {
@@ -117,12 +117,13 @@ app.get("/signup", (req, res) => {
 });
 
 app.get("/secret", (req, res) => {
-  if (req.isAuthenticated()) {
-   
-    res.render("secret", { agent: req.body.username });
-  } else {
-    res.redirect("/login");
-  }
+  User.find({ secret: { $ne: null } }, (err, data) => {
+    if (err) {
+      concole.log(err);
+    } else {
+      res.render("secret",{usersecret:data});
+    }
+  });
 });
 
 app.post("/signup", (req, res) => {
@@ -158,6 +159,26 @@ app.post("/login", (req, res) => {
       passport.authenticate("local")(req, res, function () {
         res.redirect("/secret");
       });
+    }
+  });
+});
+
+app.get("/submit", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render("submit");
+  } else {
+    res.redirect("/login");
+  }
+});
+
+app.post("/submit", (req, res) => {
+  User.findById(req.user.id, (err, data) => {
+    if (err) {
+      console.log(err);
+    } else {
+      data.secret = req.body.secret;
+      data.save();
+      res.redirect("/secret")
     }
   });
 });
